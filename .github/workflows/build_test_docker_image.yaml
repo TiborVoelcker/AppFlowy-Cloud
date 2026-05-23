@@ -80,12 +80,24 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
       - name: Build and push GoTrue image
+        if: ${{ env.DOCKERHUB_PUSH == 'true' }}
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./docker/gotrue/Dockerfile
           platforms: linux/${{ matrix.arch }}
-          push: ${{ env.DOCKERHUB_PUSH == 'true' }}
+          push: true
+          tags: |
+            appflowyinc/gotrue:${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-internal
+
+      - name: Build and export GoTrue image
+        if: ${{ env.DOCKERHUB_PUSH != 'true' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/gotrue/Dockerfile
+          platforms: linux/${{ matrix.arch }}
+          push: false
           outputs: type=docker,dest=${{ env.IMAGE_TAR }}
           tags: |
             appflowyinc/gotrue:${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-internal
@@ -131,11 +143,25 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
       - name: Build and push AppFlowy Cloud image
+        if: ${{ env.DOCKERHUB_PUSH == 'true' }}
         uses: docker/build-push-action@v5
         with:
           context: .
           platforms: linux/${{ matrix.arch }}
-          push: ${{ env.DOCKERHUB_PUSH == 'true' }}
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-internal
+          provenance: false
+          build-args: |
+            PROFILE=release
+
+      - name: Build and export AppFlowy Cloud image
+        if: ${{ env.DOCKERHUB_PUSH != 'true' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          push: false
           tags: |
             ${{ env.IMAGE_NAME }}:${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-internal
           provenance: false
@@ -184,12 +210,27 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
       - name: Build and push Admin Frontend image
+        if: ${{ env.DOCKERHUB_PUSH == 'true' }}
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./admin_frontend/Dockerfile
           platforms: linux/${{ matrix.arch }}
-          push: ${{ env.DOCKERHUB_PUSH == 'true' }}
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-internal
+          provenance: false
+          build-args: |
+            PROFILE=release
+
+      - name: Build and export Admin Frontend image
+        if: ${{ env.DOCKERHUB_PUSH != 'true' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./admin_frontend/Dockerfile
+          platforms: linux/${{ matrix.arch }}
+          push: false
           tags: |
             ${{ env.IMAGE_NAME }}:${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-internal
           provenance: false
@@ -238,12 +279,27 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
       - name: Build and push AppFlowy Worker image
+        if: ${{ env.DOCKERHUB_PUSH == 'true' }}
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./services/appflowy-worker/Dockerfile
           platforms: linux/${{ matrix.arch }}
-          push: ${{ env.DOCKERHUB_PUSH == 'true' }}
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-internal
+          provenance: false
+          build-args: |
+            PROFILE=release
+
+      - name: Build and export AppFlowy Worker image
+        if: ${{ env.DOCKERHUB_PUSH != 'true' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./services/appflowy-worker/Dockerfile
+          platforms: linux/${{ matrix.arch }}
+          push: false
           tags: |
             ${{ env.IMAGE_NAME }}:${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-internal
           provenance: false
