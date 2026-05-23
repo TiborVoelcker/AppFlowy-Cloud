@@ -59,6 +59,7 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     env:
       DOCKERHUB_PUSH: ${{ secrets.DOCKER_HUB_USERNAME != '' && secrets.DOCKER_HUB_ACCESS_TOKEN != '' }}
+      IMAGE_TAR: /tmp/gotrue-${{ github.event.inputs.debug_version }}-${{ matrix.arch }}.tar
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -85,8 +86,16 @@ jobs:
           file: ./docker/gotrue/Dockerfile
           platforms: linux/${{ matrix.arch }}
           push: ${{ env.DOCKERHUB_PUSH == 'true' }}
+          outputs: type=docker,dest=${{ env.IMAGE_TAR }}
           tags: |
             appflowyinc/gotrue:${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-internal
+
+      - name: Upload GoTrue image artifact
+        if: ${{ env.DOCKERHUB_PUSH != 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gotrue-${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-image
+          path: ${{ env.IMAGE_TAR }}
 
       - name: Logout from Docker Hub
         if: ${{ always() && env.DOCKERHUB_PUSH == 'true' }}
@@ -101,6 +110,7 @@ jobs:
     env:
       DOCKERHUB_PUSH: ${{ secrets.DOCKER_HUB_USERNAME != '' && secrets.DOCKER_HUB_ACCESS_TOKEN != '' }}
       IMAGE_NAME: ${{ secrets.DOCKER_HUB_USERNAME != '' && format('{0}/appflowy_cloud', secrets.DOCKER_HUB_USERNAME) || 'appflowy_cloud' }}
+      IMAGE_TAR: /tmp/appflowy_cloud-${{ github.event.inputs.debug_version }}-${{ matrix.arch }}.tar
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -129,8 +139,16 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-internal
           provenance: false
+          outputs: type=docker,dest=${{ env.IMAGE_TAR }}
           build-args: |
             PROFILE=release
+
+      - name: Upload AppFlowy Cloud image artifact
+        if: ${{ env.DOCKERHUB_PUSH != 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: appflowy_cloud-${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-image
+          path: ${{ env.IMAGE_TAR }}
 
       - name: Logout from Docker Hub
         if: ${{ always() && env.DOCKERHUB_PUSH == 'true' }}
@@ -145,6 +163,7 @@ jobs:
     env:
       DOCKERHUB_PUSH: ${{ secrets.DOCKER_HUB_USERNAME != '' && secrets.DOCKER_HUB_ACCESS_TOKEN != '' }}
       IMAGE_NAME: ${{ secrets.DOCKER_HUB_USERNAME != '' && format('{0}/admin_frontend', secrets.DOCKER_HUB_USERNAME) || 'admin_frontend' }}
+      IMAGE_TAR: /tmp/admin_frontend-${{ github.event.inputs.debug_version }}-${{ matrix.arch }}.tar
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -174,8 +193,16 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-internal
           provenance: false
+          outputs: type=docker,dest=${{ env.IMAGE_TAR }}
           build-args: |
             PROFILE=release
+
+      - name: Upload Admin Frontend image artifact
+        if: ${{ env.DOCKERHUB_PUSH != 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin_frontend-${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-image
+          path: ${{ env.IMAGE_TAR }}
 
       - name: Logout from Docker Hub
         if: ${{ always() && env.DOCKERHUB_PUSH == 'true' }}
@@ -190,6 +217,7 @@ jobs:
     env:
       DOCKERHUB_PUSH: ${{ secrets.DOCKER_HUB_USERNAME != '' && secrets.DOCKER_HUB_ACCESS_TOKEN != '' }}
       IMAGE_NAME: ${{ secrets.DOCKER_HUB_USERNAME != '' && format('{0}/appflowy_worker', secrets.DOCKER_HUB_USERNAME) || 'appflowy_worker' }}
+      IMAGE_TAR: /tmp/appflowy_worker-${{ github.event.inputs.debug_version }}-${{ matrix.arch }}.tar
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -219,8 +247,16 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-internal
           provenance: false
+          outputs: type=docker,dest=${{ env.IMAGE_TAR }}
           build-args: |
             PROFILE=release
+
+      - name: Upload AppFlowy Worker image artifact
+        if: ${{ env.DOCKERHUB_PUSH != 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: appflowy_worker-${{ github.event.inputs.debug_version }}-${{ matrix.arch }}-image
+          path: ${{ env.IMAGE_TAR }}
 
       - name: Logout from Docker Hub
         if: ${{ always() && env.DOCKERHUB_PUSH == 'true' }}
