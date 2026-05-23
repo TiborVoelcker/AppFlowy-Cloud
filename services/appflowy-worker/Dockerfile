@@ -17,6 +17,9 @@ FROM chef as builder
 RUN apt update && apt install -y protobuf-compiler lld clang
 
 ARG PROFILE="release"
+ARG TARGETARCH
+ARG RUSTFLAGS=""
+ARG ARM64_RUSTFLAGS="-C target-cpu=cortex-a72 -C target-feature=-crypto,-aes,-sha2,-sha3"
 
 COPY --from=planner /app/recipe.json recipe.json
 # Build our project dependencies with optimized settings
@@ -24,7 +27,10 @@ ENV CARGO_BUILD_JOBS=4
 ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
 RUN echo "Building worker with profile: ${PROFILE} "
-RUN if [ "$PROFILE" = "release" ]; then \
+RUN if [ "$TARGETARCH" = "arm64" ] && [ -z "$RUSTFLAGS" ]; then \
+      export RUSTFLAGS="$ARM64_RUSTFLAGS"; \
+    fi; \
+    if [ "$PROFILE" = "release" ]; then \
       cargo chef cook --release --recipe-path recipe.json; \
     else \
       cargo chef cook --recipe-path recipe.json; \
@@ -33,7 +39,10 @@ RUN if [ "$PROFILE" = "release" ]; then \
 COPY . .
 
 WORKDIR /app/services/appflowy-worker
-RUN if [ "$PROFILE" = "release" ]; then \
+RUN if [ "$TARGETARCH" = "arm64" ] && [ -z "$RUSTFLAGS" ]; then \
+      export RUSTFLAGS="$ARM64_RUSTFLAGS"; \
+    fi; \
+    if [ "$PROFILE" = "release" ]; then \
       cargo build --release --bin appflowy_worker; \
     else \
       cargo build --bin appflowy_worker; \

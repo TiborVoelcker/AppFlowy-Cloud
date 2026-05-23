@@ -18,6 +18,9 @@ RUN apt update && apt install -y protobuf-compiler lld clang
 # Specify a default value for FEATURES; it could be an empty string if no features are enabled by default
 ARG FEATURES=""
 ARG PROFILE="release"
+ARG TARGETARCH
+ARG RUSTFLAGS=""
+ARG ARM64_RUSTFLAGS="-C target-cpu=cortex-a72 -C target-feature=-crypto,-aes,-sha2,-sha3"
 
 COPY --from=planner /app/recipe.json recipe.json
 ENV CARGO_BUILD_JOBS=4
@@ -25,7 +28,10 @@ ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
 ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
 # Reduce memory usage during compilation
 RUN echo "Building appflowy cloud with profile: ${PROFILE}"
-RUN if [ "$PROFILE" = "release" ]; then \
+RUN if [ "$TARGETARCH" = "arm64" ] && [ -z "$RUSTFLAGS" ]; then \
+      export RUSTFLAGS="$ARM64_RUSTFLAGS"; \
+    fi; \
+    if [ "$PROFILE" = "release" ]; then \
       cargo chef cook --release --recipe-path recipe.json; \
     else \
       cargo chef cook --recipe-path recipe.json; \
@@ -36,7 +42,10 @@ ENV SQLX_OFFLINE true
 
 # Build the project
 RUN echo "Building with profile: ${PROFILE}, features: ${FEATURES}, "
-RUN if [ "$PROFILE" = "release" ]; then \
+RUN if [ "$TARGETARCH" = "arm64" ] && [ -z "$RUSTFLAGS" ]; then \
+      export RUSTFLAGS="$ARM64_RUSTFLAGS"; \
+    fi; \
+    if [ "$PROFILE" = "release" ]; then \
       cargo build --release --features "${FEATURES}" --bin appflowy_cloud; \
     else \
       cargo build --features "${FEATURES}" --bin appflowy_cloud; \
