@@ -7,10 +7,16 @@ WORKDIR /app
 
 FROM chef as builder
 ARG PROFILE="release"
+ARG TARGETARCH
+ARG RUSTFLAGS=""
+ARG ARM64_RUSTFLAGS="-C target-cpu=cortex-a72 -C target-feature=-crypto,-aes,-sha2,-sha3"
 COPY . .
 WORKDIR /app/admin_frontend
 RUN echo "Building admin_frontend with profile: ${PROFILE}"
-RUN if [ "$PROFILE" = "release" ]; then \
+RUN if [ "$TARGETARCH" = "arm64" ] && [ -z "$RUSTFLAGS" ]; then \
+      export RUSTFLAGS="$ARM64_RUSTFLAGS"; \
+    fi; \
+    if [ "$PROFILE" = "release" ]; then \
       cargo build --release --bin admin_frontend; \
     else \
       cargo build --bin admin_frontend; \

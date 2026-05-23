@@ -6,7 +6,8 @@ on:
         description: 'AppFlowy Web version'
         required: true
 env:
-  IMAGE_NAME: ${{ secrets.DOCKER_HUB_USERNAME }}/appflowy_web
+  IMAGE_NAME: ${{ secrets.DOCKER_HUB_USERNAME != '' && format('{0}/appflowy_web', secrets.DOCKER_HUB_USERNAME) || 'appflowy_web' }}
+  DOCKERHUB_PUSH: ${{ secrets.DOCKER_HUB_USERNAME != '' && secrets.DOCKER_HUB_ACCESS_TOKEN != '' }}
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -36,6 +37,7 @@ jobs:
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
+        if: ${{ env.DOCKERHUB_PUSH == 'true' }}
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
@@ -54,11 +56,12 @@ jobs:
           build-args: VERSION=${{ github.event.inputs.version }}
           context: docker/web
           provenance: false
-          push: true
+          push: ${{ env.DOCKERHUB_PUSH == 'true' }}
   merge:
     runs-on: ubuntu-24.04
     needs:
       - build
+    if: ${{ env.DOCKERHUB_PUSH == 'true' }}
     steps:
       - name: Prepare
         run: |
